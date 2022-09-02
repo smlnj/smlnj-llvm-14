@@ -19,6 +19,28 @@ The important properties of the JWA runtime model are
 
 * All arguments are passed in hardware registers.
 
+## Organzation
+
+* `build-llvm.sh` -- shell script for configuring and building the LLVM tools
+  and libraries.
+
+* `cmake` -- LLVM's common CMake modules; see `cmake/README.rst` for details.
+
+* `src` -- the main LLVM source directory.
+
+* `src/CMakePresets.json` -- CMake presets that customize the configuration and
+  build process.  This file is **not** part of the standard LLVM sources.
+
+The `build-llvm.sh` script will produce several additional directories:
+
+* `bin` -- LLVM executables (*e.g.*, `llc`)
+
+* `build` -- the directory used to compile the LLM tools and libraries
+
+* `include` -- LLVM include files
+
+* `lib` -- LLVM libraries
+
 ## History
 
 The original JWA convention was introduced in a 2016 ML Workshop paper.
@@ -36,6 +58,30 @@ The use of this approach in the **SML/NJ** system is described in an IFL paper.
 > [**A New Backend for Standard ML of New Jersey**](https://dl.acm.org/doi/10.1145/3462172.3462191),
 > *Proceedings of the 32nd Symposium on Implementation and Application of
 > Functional Languages (IFL '20)*, by Kavon Farvardin and John Reppy, September 2020.
+
+## Differences
+
+The main difference from the original LLVM source tree is that we modify the
+sources to support the JWA calling convention (details are given below).
+In addition to these changes, we prune parts of the source tree that are not
+relevant to its use in the **SML/NJ** system and we made a couple of small
+changes to integrate with our use of CMake.
+
+### Pruned Sources
+
+We removed the following subdirectories from the **LLVM** source tree.
+
+``` bash
+rm -rf benchmarks bindings examples test unittests
+```
+
+### CMake Changes
+
+The **LLVM** project has many tools and components that we do not use
+(*e.g.*, the components that we prune from the source).   Therefore, we
+need to specify a large number of CMake variables to disable
+these components.  We add the file `src/CMakePresets.json` and use CMake's
+`--presets` option to simplify the configuration of the system.
 
 ## Patching LLVM
 
@@ -64,7 +110,7 @@ This change needs to be reverted to make things work, so we add the following `#
 to disable the bogus code:
 
 ``` c++
-#fdef BROKEN_NAKED_ATTRIBUTE
+#ifdef BROKEN_NAKED_ATTRIBUTE
   // In Naked functions we aren't going to save any registers.
   if (F.hasFnAttribute(Attribute::Naked))
     return;
@@ -75,8 +121,9 @@ to disable the bogus code:
 
 The file `$LLVM/include/llvm/IR/CallingConv.h` assigns integer codes for
 the various calling conventions.  In **LLVM** 14.0.x, the last number assigned
-is `20`, so we use `21` for **JWA**.  Add the following code to the file just
-before the first target-specific code (which will be `64`).
+is `20` (for the `SwiftTail` convention), so we use `21` for **JWA**.
+Add the following code to the file just before the first target-specific
+code (which will be `64`).
 
 ``` c++
     /// JWA - "Jump With Arguments" is a calling convention that requires the
@@ -97,8 +144,8 @@ pretty printer for LLVM assembly code.
 
 #### `AsmParser/LLTToken.h`
 
-Add `kw_jwacc` as a token in `$LLVM/lib/AsmParser/LLTToken.h` (I added it following
-`kw_tailcc`).
+Add `kw_jwacc` as a token in `$LLVM/include/llvm/AsmParser/LLToken.h` (I added it following
+`kw_swifttailcc`).
 
 #### `AsmParser/LLLexer.cpp`
 
@@ -112,14 +159,21 @@ to the file `$LLVM/lib/AsmParser/LLLexer.cpp`.
 
 #### `AsmParser/LLParser.cpp`
 
-Add the following case
+Add the following comment
+
+``` c++
+///   ::= 'jwacc'
+```
+
+and case
 
 ``` c++
   case lltok::kw_jwacc:          CC = CallingConv::JWA; break;
 ```
 
 to the function `LLParser::ParseOptionalCallingConv`
-in the file `$LLVM/lib/AsmParser/LLLexer.cpp`.
+in the file `$LLVM/lib/AsmParser/LLParser.cpp`.
+I add these following the `swifttailcc` (calling convention 20).
 
 #### `IR/AsmWriter.cpp`
 
@@ -229,14 +283,12 @@ In the file `$LLVM/lib/Target/X86/X86FastISel.cpp`, the function
 `computeBytesPoppedByCalleeForSRet` needs to be modified to
 recognize the **JWA** convention.
 
-To the code
 ``` c++
   if (CC == CallingConv::Fast || CC == CallingConv::GHC ||
       CC == CallingConv::HiPE || CC == CallingConv::Tail ||
-      CC == CallingConv::SwiftTail)
+      CC == CallingConv::SwiftTail || CC == CallingConv::JWA)
     return 0;
 ```
-add a test for **JWA** (`CC == CallingConv::JWA`).
 
 #### `X86ISelLowering.cpp`
 
@@ -279,7 +331,8 @@ of files in the directory `$LLVM/lib/Target/AArch64/`.
 
 #### `AArch64CallingConvention.td`
 
-At the end of the file, add the following code:
+At the end of the file `$LLVM/lib/Target/AArch64/AArch64CallingConvention.td`,
+add the following code:
 
 ```
 //===----------------------------------------------------------------------===//
@@ -332,7 +385,8 @@ namespace; otherwise it will be marked as a `static` function.
 
 #### `AArch64CallingConvention.h`
 
-Add the following function prototypes:
+To the file `$LLVM/lib/Target/AArch64/AArch64CallingConvention.h`
+add the following function prototypes:
 
 ``` c++
 bool CC_AArch64_JWA(unsigned ValNo, MVT ValVT, MVT LocVT,
