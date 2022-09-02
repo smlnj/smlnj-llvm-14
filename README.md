@@ -21,6 +21,9 @@ The important properties of the JWA runtime model are
 
 ## Organzation
 
+* `LLVM-VERSION` -- specifies the version of LLVM that this source tree is
+  derived from.
+
 * `build-llvm.sh` -- shell script for configuring and building the LLVM tools
   and libraries.
 
