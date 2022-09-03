@@ -21,6 +21,9 @@ The important properties of the JWA runtime model are
 
 ## Organzation
 
+* `LICENSE` -- the LLVM source code license, which covers the code in the
+  `src` sub-directory.
+
 * `LLVM-VERSION` -- specifies the version of LLVM that this source tree is
   derived from.
 
@@ -30,6 +33,8 @@ The important properties of the JWA runtime model are
 * `cfgc` -- source code for a tool that compiles the SML/NJ CFG IR pickles
   to target code.  This tool is used to debug the SML/NJ backend; it is not
   part of the code generation pipeline.
+
+* `cfgc/LICENSE` -- the license for the code in the `cfgc` sub-directory.
 
 * `cmake` -- LLVM's common CMake modules; see `cmake/README.rst` for details.
 
