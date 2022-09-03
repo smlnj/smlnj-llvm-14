@@ -61,7 +61,7 @@ The original JWA convention was introduced in a 2016 ML Workshop paper.
 > *Proceedings of the 2016 ACM SIGPLAN Workshop on ML*,
 > by Kavon Farvardin and John Reppy, September 2016.
 
-which described using LLVM as a backend for the Manticore system.
+which describes using LLVM as a backend for the Manticore system.
 A longer version of this paper appeared in
 [Volume 285 of EPTCS](https://cgi.cse.unsw.edu.au/~eptcs/content.cgi?MLOCAML2016).
 
@@ -108,15 +108,11 @@ X86 and Arm targets.
 There is some documentation about how to specify calling conventions in
 ["Writing an LLVM Backend"](https://llvm.org/docs/WritingAnLLVMBackend.html)
 
-### Fixing `lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp`
-
-In LLVM Version 11.0.0, a change was made to the `SelectionDAGISel::LowerArguments`
-method in the `SelectionDAGBuilder.cpp` file that breaks the handling of the `naked`
-attribute on functions.  This change needs to be reverted to make things work.
+### Fixing `SelectionDAGBuilder.cpp`
 
 In Version 11.0.0 of *LLVM*, a change was made to the `SelectionDAGISel::LowerArguments`
-in the `SelectionDAGBuilder.cpp` file that breaks the handling of the `naked`
-attribute on functions
+in the `$LLVM/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp` file that
+breaks the handling of the `naked` attribute on functions with arguments
 (see commit [4dba59689d008df7be37733de4bb537b2911d3ad](https://github.com/llvm/llvm-project/commit/4dba59689d008df7be37733de4bb537b2911d3ad)).
 This change needs to be reverted to make things work, so we add the following `#ifdef`
 to disable the bogus code:
@@ -128,6 +124,9 @@ to disable the bogus code:
     return;
 #endif
 ```
+
+There is an open [issue (51741)](https://github.com/llvm/llvm-project/issues/51741)
+on this bug, but it does not seem to be high priority for a fix.
 
 ### `CallingConv.h`
 
@@ -154,12 +153,12 @@ in LLVM assembler (useful for debugging the code generator, but not
 required for the **SML/NJ** compiler), we must modify the parser and
 pretty printer for LLVM assembly code.
 
-#### `AsmParser/LLTToken.h`
+#### `LLTToken.h`
 
 Add `kw_jwacc` as a token in `$LLVM/include/llvm/AsmParser/LLToken.h` (I added it following
 `kw_swifttailcc`).
 
-#### `AsmParser/LLLexer.cpp`
+#### `LLLexer.cpp`
 
 Add the following keyword definition
 
@@ -169,7 +168,7 @@ Add the following keyword definition
 
 to the file `$LLVM/lib/AsmParser/LLLexer.cpp`.
 
-#### `AsmParser/LLParser.cpp`
+#### `LLParser.cpp`
 
 Add the following comment
 
@@ -185,9 +184,9 @@ and case
 
 to the function `LLParser::ParseOptionalCallingConv`
 in the file `$LLVM/lib/AsmParser/LLParser.cpp`.
-I add these following the `swifttailcc` (calling convention 20).
+I add these following the `swifttailcc`, which is calling convention 20.
 
-#### `IR/AsmWriter.cpp`
+#### `AsmWriter.cpp`
 
 The file `$LLVM/lib/IR/AsmWriter.cpp` implements printing of the
 LLVM assembly code.  Modify it by adding the case
