@@ -27,6 +27,10 @@ The important properties of the JWA runtime model are
 * `build-llvm.sh` -- shell script for configuring and building the LLVM tools
   and libraries.
 
+* `cfgc` -- source code for a tool that compiles the SML/NJ CFG IR pickles
+  to target code.  This tool is used to debug the SML/NJ backend; it is not
+  part of the code generation pipeline.
+
 * `cmake` -- LLVM's common CMake modules; see `cmake/README.rst` for details.
 
 * `src` -- the main LLVM source directory.
