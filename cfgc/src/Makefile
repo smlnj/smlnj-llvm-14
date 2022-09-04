@@ -23,8 +23,6 @@ else
 HOST_ARCH=unknown
 endif
 
-BUILD ?=	release
-
 LLVM_DIR =	../..
 LLVM_CONFIG =	$(LLVM_DIR)/bin/llvm-config
 

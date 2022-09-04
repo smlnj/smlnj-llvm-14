@@ -44,7 +44,7 @@ class mc_gen {
 
   private:
     target_info const *_tgtInfo;
-    llvm::TargetMachine *_tgtMachine;
+    std::unique_ptr<llvm::TargetMachine> _tgtMachine;
 #ifdef LEGACY_PASS_MANAGER
     std::unique_ptr<llvm::legacy::FunctionPassManager> _passMngr;
 #else

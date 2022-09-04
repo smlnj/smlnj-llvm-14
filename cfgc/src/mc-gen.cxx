@@ -42,7 +42,11 @@
 
 
 mc_gen::mc_gen (llvm::LLVMContext &context, target_info const *info)
+#ifdef LEGACY_PASS_MANAGER
+  : _tgtInfo(info), _tgtMachine(nullptr)
+#else
   : _tgtInfo(info), _tgtMachine(nullptr), _mam(), _fam(), _pb(nullptr)
+#endif
 {
   // get the LLVM target triple
     llvm::Triple triple = info->getTriple();
@@ -79,38 +83,42 @@ llvm::dbgs() << "host CPU = " << llvm::sys::getHostCPUName() << "\n";
 
 // see include/llvm/Support/*Parser.def for the various CPS and feature names
 // that are recognized
-    this->_tgtMachine = target->createTargetMachine(
+    std::unique_ptr<llvm::TargetMachine> tgtMachine(target->createTargetMachine(
 	triple.str(),
 	"generic",		/* CPU name */
 	"",			/* features string */
 	tgtOptions,
 	llvm::Reloc::PIC_,
 	llvm::None,
-	llvm::CodeGenOpt::Less);
+	llvm::CodeGenOpt::Less));
 
-    if (this->_tgtMachine == nullptr) {
+    if (!tgtMachine) {
 	std::cerr << "**** Fatal error: unable to create target machine\n";
         assert(false);
     }
 
+    this->_tgtMachine = std::move(tgtMachine);
+
 #ifndef LEGACY_PASS_MANAGER /* using new pass manager */
 
     // Create the new pass manager builder.
-    this->_pb = new llvm::PassBuilder(this->_tgtMachine);
+    this->_pb = new llvm::PassBuilder(this->_tgtMachine.get());
 
     // we only perform function-level optimizations, so we only need
     // the function analysis
+    llvm::LoopAnalysisManager lam;
+    llvm::CGSCCAnalysisManager cgam;
     this->_pb->registerModuleAnalyses(this->_mam);
+    this->_pb->registerCGSCCAnalyses(cgam);
     this->_pb->registerFunctionAnalyses(this->_fam);
+    this->_pb->registerLoopAnalyses(lam);
+    this->_pb->crossRegisterProxies(lam, this->_fam, cgam, this->_mam);
 #endif // ! LEGACY_PASS_MANAGER
 
 } // mc_gen constructor
 
 mc_gen::~mc_gen ()
 {
-    if (this->_tgtMachine != nullptr) {
-        delete this->_tgtMachine;
-    }
 #ifndef LEGACY_PASS_MANAGER
     if (this->_pb != nullptr) {
         delete this->_pb;
