@@ -28,37 +28,37 @@ The important properties of the JWA runtime model are
 
 ## Organzation
 
-* `LICENSE` -- the LLVM source code license, which covers the code in the
+* `LICENSE` -- the **LLVM** source code license, which covers the code in the
   `src` sub-directory.
 
-* `LLVM-VERSION` -- specifies the version of LLVM that this source tree is
-  derived from.
+* `LLVM-VERSION` -- specifies the version of **LLVM** that this source tree is
+  derived from (which is 14.0.5).
 
 * `build-llvm.sh` -- shell script for configuring and building the LLVM tools
   and libraries.
 
-* `cfgc` -- source code for a tool that compiles the SML/NJ CFG IR pickles
-  to target code.  This tool is used to debug the SML/NJ backend; it is not
+* `cfgc` -- source code for a tool that compiles the **SML/NJ** CFG IR pickles
+  to target code.  This tool is used to debug the **SML/NJ** backend; it is not
   part of the code generation pipeline.
 
 * `cfgc/LICENSE` -- the license for the code in the `cfgc` sub-directory.
 
-* `cmake` -- LLVM's common CMake modules; see `cmake/README.rst` for details.
+* `cmake` -- **LLVM**'s common CMake modules; see `cmake/README.rst` for details.
 
-* `src` -- the main LLVM source directory.
+* `src` -- the main **LLVM** source directory.
 
 * `src/CMakePresets.json` -- CMake presets that customize the configuration and
   build process.  This file is **not** part of the standard LLVM sources.
 
 The `build-llvm.sh` script will produce several additional directories:
 
-* `bin` -- LLVM executables (*e.g.*, `llc`)
+* `bin` -- **LLVM** executables (*e.g.*, `llc`)
 
 * `build` -- the directory used to compile the LLM tools and libraries
 
-* `include` -- LLVM include files
+* `include` -- **LLVM** include files
 
-* `lib` -- LLVM libraries
+* `lib` -- **LLVM** libraries
 
 ## History
 
@@ -80,7 +80,7 @@ The use of this approach in the **SML/NJ** system is described in an IFL paper.
 
 ## Differences
 
-The main difference from the original LLVM source tree is that we modify the
+The main difference from the original **LLVM** source tree is that we modify the
 sources to support the JWA calling convention (details are given below).
 In addition to these changes, we prune parts of the source tree that are not
 relevant to its use in the **SML/NJ** system and we made a couple of small
