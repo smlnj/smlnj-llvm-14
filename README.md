@@ -1,6 +1,13 @@
 # LLVM with Support for JWA Calling Convention
 
-The jump-with-arguments (JWA) calling convention is an [**LLVM**](https://llvm.org) calling
+This repository is version of [**LLVM**](https://llvm.org) with support for the JWA
+calling convention.  It is meant to be used as a submodule for the development
+branch of [**Standard ML of New Jersey** (**SML/NJ**)](https://smlnj.org) and is based on **LLVM**
+version 14.0.6.
+
+## The Jump-with-Arguments Calling Convention
+
+The jump-with-arguments (JWA) calling convention is a [**LLVM**](https://llvm.org) calling
 convention designed to support a no-stack call-with-current-continuation
 runtime model, such as used in the [**Manticore**](http://manticore.cs.uchicago.edu)
 and the [**SML/NJ**](https://smlnj.org) systems.  This source tree is being used
